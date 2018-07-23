@@ -20,7 +20,7 @@ class Redis2Graphite < Sensu::Plugin::Metric::CLI::Graphite
                      'run_id', '^slave', 'used_memory_human', 'used_memory_peak_human',
                      'redis_mode', 'os', 'arch_bits', 'tcp_port',
                      'rdb_last_bgsave_status', 'aof_last_bgrewrite_status', 'config_file',
-                     'redis_build_id']
+                     'redis_build_id'].freeze
 
   option :host,
          short: '-h HOST',
@@ -83,6 +83,13 @@ class Redis2Graphite < Sensu::Plugin::Metric::CLI::Graphite
         output "#{config[:scheme]}.#{k}.expires", expires
       else
         output "#{config[:scheme]}.#{k}", v
+      end
+    end
+
+    # Loop thru commandstats entries for perf metrics
+    redis.info('commandstats').each do |k, v|
+      %w(['calls', 'usec_per_call', 'usec']).each do |x|
+        output "#{config[:scheme]}.commandstats.#{k}.#{x}", v[x]
       end
     end
 
